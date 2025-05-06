@@ -1,0 +1,4 @@
+QQ_APPID="xxx"
+QQ_SECRET="xxx"
+QQ_TOKEN="xxx"
+DEEPSEEK_API_KEY="xxx"
