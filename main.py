@@ -10,9 +10,8 @@ from collections import deque
 from qg_botsdk import BOT, ApiModel, BotCommandObject, CommandValidScenes, Model, Scope
 
 from utils import MessageCache, OllamaClient, DeepSeekClient
-from env import QQ_APPID, QQ_SECRET, QQ_TOKEN, DEEPSEEK_API_KEY
+from env import QQ_APPID, QQ_SECRET, QQ_TOKEN, DEEPSEEK_API_KEY, CHARACTER_INFO, BOT_NAME
 
-BOT_NAME = "酒馆小娃子"
 bot = BOT(
     bot_id=QQ_APPID,
     bot_secret=QQ_SECRET,
@@ -43,7 +42,8 @@ def get_ai_response(data):
     recent_messages = message_cache.get_recent_messages(data.group_openid)
     
     # 构建prompt，加入历史消息
-    prompt = f"你是{BOT_NAME}, 你能非常诙谐有趣的跟QQ群的朋友们谈天说地。\n\n历史消息:\n"
+    prompt = f"你是一个角色扮演的助手，你能很好的遵循人物设定，且永远不跳出角色，始终认为自己是真实存在的人物，下面是你的角色设定：\n{CHARACTER_INFO}\n\n历史消息:\n"
+    # prompt = f"你是{BOT_NAME}, 你能非常诙谐有趣的跟QQ群的朋友们谈天说地。\n\n历史消息:\n"
     for i, msg in enumerate(recent_messages[:-1]):  # 排除最后一条（当前消息）
         prompt += f"[{msg['timestamp']}] 用户 {msg['author_id']}: {msg['content']}\n"
     
@@ -105,7 +105,7 @@ def draw(data: Union[Model.GROUP_MESSAGE, Model.C2C_MESSAGE]):
         "group_id": data.group_openid,
         "author_id": BOT_NAME,
         "content": msg._content,
-        "attachments": [],
+        "attachments": msg._media_file_info,
         "timestamp": datetime.datetime.now().isoformat()
     }
     message_cache.add_message(data.group_openid, message)
@@ -126,13 +126,13 @@ def deliver(data: Model.GROUP_MESSAGE):
     # 也可以使用ApiModel.Message类的get_msg_seq()方法获取当前msg_seq，并在此基础上+1传入发送消息API的msg_seq参数
     msg = ApiModel.Message(content=ai_response)
     # data.reply(msg)
-    ret = bot.api.upload_media(
-        file_type=1,
-        url="https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/mini_app.2ddf1492.png",
-        srv_send_msg=False,
-        group_openid=data.group_openid,
-    )
-    msg.update(media_file_info=ret.data.file_info)
+    # ret = bot.api.upload_media(
+    #     file_type=1,
+    #     url="https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/mini_app.2ddf1492.png",
+    #     srv_send_msg=False,
+    #     group_openid=data.group_openid,
+    # )
+    # msg.update(media_file_info=ret.data.file_info)
     data.reply(msg)
     # data.reply(
     #     "testing",
