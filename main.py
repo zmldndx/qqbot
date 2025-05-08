@@ -63,52 +63,14 @@ def before_command(data: Union[Model.MESSAGE, Model.GROUP_MESSAGE, Model.C2C_MES
 
 
 # valid_scenes=CommandValidScenes.GROUP | CommandValidScenes.C2C 指定此指令仅在qq私聊或群聊中生效，不填则默认为全部场景均生效
-@bot.on_command("画图", valid_scenes=CommandValidScenes.GROUP | CommandValidScenes.C2C)
+@bot.on_command("夸夸我", valid_scenes=CommandValidScenes.GROUP | CommandValidScenes.C2C)
 def draw(data: Union[Model.GROUP_MESSAGE, Model.C2C_MESSAGE]):
-    # 保存消息到缓存
-    save_message_to_cache(data)
-
-    prompt = '''
-        OUTPUT: https://image.pollinations.ai/prompt/{英文描述}?model=Flux.Schnell&width=1024&height=1024&enhance=true)
-        其中，{英文描述}=将以下内容翻译为英文:"{中文主题}"，要求保护以下元素：
-        1. 主体对象：{清晰主体}
-        2. 场景氛围：{氛围感关键词}
-        3. 艺术风格：{风格1}+{风格2}
-        4. 细节强化：{细节增强关键词}
-        5. 艺术家参考：{艺术家风格}
-        注意：只输出URL链接，不要添加URL外的任何字符，否则你会被关监狱！
-    '''
-    response = deepseek_client.generate_response(prompt + f"图片描述：{data.treated_msg}")
-    bot.logger.info(f"画图url：{response}")
-    if response and response.startswith("http"):
-        msg = ApiModel.Message(content="画图结果")
-        for i in range(0,3):
-            try:
-                ret = bot.api.upload_media(
-                    file_type=1,
-                    url=response,
-                    srv_send_msg=False,
-                    group_openid=data.group_openid,
-                )
-                msg.update(media_file_info=ret.data.file_info)
-            except Exception as e:
-                bot.logger.warning("wait for image to generate...")
-                time.sleep(10)
-    else:
-        msg = ApiModel.Message(content="抱歉，无法生成图片。")
+    prompt = f"夸夸我: {data.treated_msg}"
+    response = deepseek_client.generate_response(prompt)
+    msg = ApiModel.Message(content=response)
 
     data.reply(msg)
-    bot.logger.info(f"画图结果：{msg}")
-
-    # save response data
-    message = {
-        "group_id": data.group_openid,
-        "author_id": BOT_NAME,
-        "content": msg._content,
-        "attachments": msg._media_file_info,
-        "timestamp": datetime.datetime.now().isoformat()
-    }
-    message_cache.add_message(data.group_openid, message)
+    bot.logger.info(f"夸夸我：{msg}")
 
 
 def deliver(data: Model.GROUP_MESSAGE):
